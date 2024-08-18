@@ -15,7 +15,7 @@ public class ForecastController {
         this.service = service;
     }
 
-    @GetMapping("/forecast/daily")
+    @GetMapping("/hello")
     public @ResponseBody String greeting() {
         return service.greet();
     }
