@@ -1,6 +1,8 @@
 package com.rowan.weather.weather_app;
 
+import com.rowan.weather.weather_app.service.ForecastDataPOJO;
 import com.rowan.weather.weather_app.service.ForecastService;
+import netscape.javascript.JSObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -18,6 +20,12 @@ public class ForecastController {
     @GetMapping("/hello")
     public @ResponseBody String greeting() {
         return service.greet();
+    }
+
+
+    @GetMapping("/forecast")
+    public @ResponseBody ForecastDataPOJO forecast() {
+        return new ForecastDataPOJO();
     }
 
 }
