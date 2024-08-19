@@ -45,7 +45,7 @@ public class ForecastController {
 }
 
 abstract class ForecastQueryParams {
-    @Getter private static final List<String> periods = List.of("three-hourly", "daily", "weekly");
+    @Getter private static final List<String> periods = List.of("hourly", "three-hourly", "daily");
 }
 
 @ResponseStatus(value = HttpStatus.BAD_GATEWAY, reason = "Exception in forecast service")
