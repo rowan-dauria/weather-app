@@ -9,4 +9,6 @@ public class ForecastService {
         return "Hello World";
     }
 
+    public ForecastDataPOJO dailyForecast() { return new ForecastDataPOJO(); }
+
 }

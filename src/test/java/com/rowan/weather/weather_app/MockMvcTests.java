@@ -33,6 +33,12 @@ public class MockMvcTests {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private class MockServiceException extends RuntimeException {
+        MockServiceException() {
+            super("Mock service exception");
+        }
+    }
+
 
     @Test
     void shouldReturnDefaultMessage() throws Exception {
@@ -44,6 +50,7 @@ public class MockMvcTests {
 
     @Test
     void shouldReturnDailyForecast() throws Exception {
+        when(service.dailyForecast()).thenReturn(new ForecastDataPOJO());
         MvcResult result = this.mockMvc.perform(get("/forecast").param("period", "daily"))
                 .andExpectAll(
                     status().isOk(),
@@ -55,6 +62,39 @@ public class MockMvcTests {
         ForecastDataPOJO response = objectMapper.readValue(responseData, ForecastDataPOJO.class);
 
         Assert.isTrue(response.getData() == 5, "data in object should equal 5");
+    }
+
+    @Test
+    void shouldErrorOnInvalidQueryParams() throws Exception {
+        this.mockMvc.perform(get("/forecast").param("period", "nonsense"))
+                .andExpectAll(
+                        status().is4xxClientError(),
+                        status().isBadRequest(),
+                        status().reason("Invalid forecast query parameters")
+                );
+    }
+
+    @Test
+    void shouldAcceptValidQueryParams() throws Exception {
+        this.mockMvc.perform(get("/forecast").param("period", "three-hourly"))
+                .andExpect(status().isOk());
+
+        this.mockMvc.perform(get("/forecast").param("period", "daily"))
+                .andExpect(status().isOk());
+
+        this.mockMvc.perform(get("/forecast").param("period", "weekly"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldReturnUsefulErrorIfServiceException() throws Exception {
+        when(service.dailyForecast()).thenThrow(new MockServiceException());
+        this.mockMvc.perform(get("/forecast").param("period", "three-hourly"))
+                .andExpectAll(
+                        status().is5xxServerError(),
+                        status().isBadGateway(),
+                        status().reason("Exception in forecast service")
+                );
     }
 
 }
