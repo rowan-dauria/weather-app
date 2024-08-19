@@ -44,7 +44,7 @@ public class MockMvcTests {
     void shouldReturnDefaultMessage() throws Exception {
         when(service.greet()).thenReturn("Hello Mock");
 
-        this.mockMvc.perform(get("/hello")).andDo(print()).andExpect(status().isOk())
+        this.mockMvc.perform(get("/hello")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Hello Mock")));
     }
 
@@ -82,7 +82,7 @@ public class MockMvcTests {
         this.mockMvc.perform(get("/forecast").param("period", "daily"))
                 .andExpect(status().isOk());
 
-        this.mockMvc.perform(get("/forecast").param("period", "weekly"))
+        this.mockMvc.perform(get("/forecast").param("period", "hourly"))
                 .andExpect(status().isOk());
     }
 
