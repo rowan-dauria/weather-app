@@ -5,6 +5,7 @@ import com.rowan.weather.weather_app.service.ForecastService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
+import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,15 +31,20 @@ public class ForecastController {
 
 
     @GetMapping("/forecast")
-    public @ResponseBody ForecastDataPOJO forecast(HttpServletRequest request, HttpServletResponse response) {
+    public @ResponseBody String forecast(HttpServletRequest request, HttpServletResponse response) {
         String period = request.getParameter("period");
         if (!(ForecastQueryParams.getPeriods().contains(period))) {
             throw new InvalidForecastQueryException();
         }
-        try {
-            return service.dailyForecast();
-        } catch (Exception e) {
-            throw new ForecastServiceException(e);
+        // TODO check which request parameter is provided (should be 'daily') and call the forecast service.
+        if (period.equals("hourly")) {
+            try {
+                return service.HourlyForecast();
+            } catch (Exception e) {
+                throw new ForecastServiceException(e);
+            }
+        } else {
+            throw new RuntimeException("something broke!");
         }
     }
 
