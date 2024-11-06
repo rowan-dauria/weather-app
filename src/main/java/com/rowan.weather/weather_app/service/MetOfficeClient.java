@@ -17,16 +17,15 @@ public class MetOfficeClient {
 
     private RestClient restClient;
 
+    @Autowired
     private final MetClientConfig metClientConfig;
 
-    @Autowired
     public MetOfficeClient(MetClientConfig metClientConfig) {
         this.metClientConfig = metClientConfig;
     }
 
     @PostConstruct
     public void init() {
-        System.out.println(metClientConfig.getApiKey());
         restClient = RestClient.builder()
                 .baseUrl("https://data.hub.api.metoffice.gov.uk/")
                 .defaultHeader("apikey", metClientConfig.getApiKey())
