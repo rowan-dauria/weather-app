@@ -39,7 +39,7 @@ public class ForecastController {
         // TODO check which request parameter is provided (should be 'daily') and call the forecast service.
         if (period.equals("hourly")) {
             try {
-                return service.HourlyForecast();
+                return service.hourlyForecast();
             } catch (Exception e) {
                 throw new ForecastServiceException(e);
             }

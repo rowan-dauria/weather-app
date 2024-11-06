@@ -17,7 +17,15 @@ public class ForecastService {
     }
 
     // todo make put the forecast in a more specific data class
-    public String HourlyForecast() {
+    public String hourlyForecast() {
         return metOfficeClient.getSiteSpecificHourlyForecast(51.507351, -0.127758);
+    }
+
+    public ForecastDataPOJO dailyForecast() {
+        return metOfficeClient.getSiteSpecificThreeHourlyForecast(51.507351, -0.127758);
+    }
+
+    public ForecastDataPOJO threeHourlyForeCast() {
+        return metOfficeClient.getSiteSpecificDailyForecast(51.507351, -0.127758);
     }
 }
