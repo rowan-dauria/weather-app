@@ -33,6 +33,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) // Needed to make @beforeall not static
+// Needed to include MetClientConfig in test context
 @ContextConfiguration(classes = {MetOfficeClient.class, MetClientConfig.class})
 @RestClientTest(MetOfficeClient.class)
 public class MetOfficeClientTests {
