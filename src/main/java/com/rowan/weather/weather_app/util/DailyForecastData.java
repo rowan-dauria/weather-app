@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 public class DailyForecastData implements ForecastData {
 
-    private ArrayList<Float> temperatures;
+    private final ArrayList<Float> temperatures = new ArrayList<>();
 
     DailyForecastData(String rawDataString) {
         JSONObject rawData = ForecastData.convertToJSONObj(rawDataString);
@@ -32,8 +32,8 @@ public class DailyForecastData implements ForecastData {
                 .mapToObj(arr::getJSONObject);
 
         stream.forEach(obj -> {
-            System.out.println(obj);
-            temperatures.add(obj.getFloat("screenTemperature"));
+            float t = obj.getFloat("screenTemperature");
+            temperatures.add(t);
         });
 
     }
