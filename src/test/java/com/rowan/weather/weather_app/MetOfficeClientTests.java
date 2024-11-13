@@ -15,10 +15,12 @@ import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.context.annotation.*;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.client.ExpectedCount;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.util.StopWatch;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
@@ -26,6 +28,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -65,8 +69,23 @@ public class MetOfficeClientTests {
                 coords[0],
                 coords[1]
         );
+
+        String slowURI = String.format(
+                "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly?latitude=%f&longitude=%f",
+                0.000000,
+                0.000000
+        );
         // todo move this mockserver expect so that it is test dependent
-        mockServer.expect(ExpectedCount.times(1), requestTo(requestURI))
+        mockServer.expect(ExpectedCount.once(), requestTo(slowURI))
+                .andRespond(req -> {
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return withSuccess("{ \"message\": \"ok\" }", MediaType.APPLICATION_JSON).createResponse(req);
+                });
+        mockServer.expect(ExpectedCount.once(), requestTo(requestURI))
                 .andRespond(withSuccess(asString(hourlyResource), MediaType.APPLICATION_JSON));
     }
     @Test
@@ -114,6 +133,44 @@ public class MetOfficeClientTests {
             throw new RuntimeException("There was an error reading the hourly forecast JSON");
         } catch (NullPointerException e) {
             throw new RuntimeException("Could not find property 'type' in JSON object");
+        }
+    }
+
+    @Test
+    void shouldBeNonBlockingForSlowServer() {
+        StopWatch stopWatch_slow = new StopWatch("slow");
+        StopWatch stopWatch_fast = new StopWatch("fast");
+
+        CompletableFuture<Long> duration_slow = CompletableFuture.supplyAsync(() -> {
+            stopWatch_slow.start();
+            System.out.println("stopwatch started for slow request");
+            // Specific coords cause a slow response
+            this.client.getSiteSpecificHourlyForecast(0.000000, 0.000000);
+            stopWatch_slow.stop();
+            System.out.println("stopwatch stopped for slow request");
+            return stopWatch_slow.getTotalTimeMillis();
+        });
+
+        CompletableFuture<Long> duration_fast = CompletableFuture.supplyAsync(() -> {
+            stopWatch_fast.start();
+            System.out.println("stopwatch started for fast request");
+            this.client.getSiteSpecificHourlyForecast(coords[0], coords[1]);
+            stopWatch_fast.stop();
+            System.out.println("stopwatch stopped for fast request");
+            return stopWatch_fast.getTotalTimeMillis();
+        });
+
+        CompletableFuture<Void> combined = CompletableFuture.allOf(duration_slow, duration_fast);
+
+        combined.join();
+
+        try {
+            System.out.printf("Duration fast request: %d milliseconds", duration_fast.get());
+
+            assertThat(duration_slow.get()).isGreaterThanOrEqualTo(5000);
+            assertThat(duration_fast.get()).isLessThan(1000);
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
         }
     }
 }
